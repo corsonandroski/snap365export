@@ -16,6 +16,8 @@ function getMonthFromString(mon){
 const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
 const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
 
+console.log(month, year);
+
 const response = httpGet(`https://era.snapschedule365.com/dataapi/ERA/CalendarView?monthDate=${year}-${month}-01`);
 
 //Get employee ID to filter assigned shifts
