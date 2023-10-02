@@ -7,4 +7,13 @@
     "default_popup": "popup.html",
     "default_icon": "icon.png"
   }
+  "content_scripts": [
+    {
+      "js": ["scripts/content.js"],
+      "matches": [
+        "https://era.snapschedule365.com/*",
+        "https://developer.chrome.com/docs/webstore/*"
+      ]
+    }
+  ]
 }
