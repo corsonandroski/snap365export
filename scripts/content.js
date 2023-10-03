@@ -52,14 +52,26 @@ function processResponse(r){
   const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
 
   //Create CSV starting with headers
-  let gCal = `Subject, Start Date, Start Time, End Time`
+  let gCalCSV = `Subject, Start Date, Start Time, End Time`
     .concat(response.ShiftAssignments
         .filter((s) => s.EmployeeID == employeeID)
         .map((s) =>
              `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
      ).toString()
 
-  console.log(gCal)
+  console.log(gCalCSV)
+
+  // updateDownloadButton
+  if (!document.getElementById("downloadButton")){
+    let button = document.createElement("button");
+    button.id = "downloadButton"
+    document.querySelectorAll("[data-role='navbar']")[1].appendChild(button);
+  }
+
+  button = document.getElementById("downloadButton");
+  button.value = `download ${
+    getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ").join(" "))
+  } shifts`
 
   interval = null;
 }
