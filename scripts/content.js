@@ -49,17 +49,7 @@ function processResponse(r){
   const employeeID = response.MyEmployee.ID;
 
   //Get shift definitions, create object with shift ID keys and shift description values
-  const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
-
-  //Create CSV starting with headers
-  let gCalCSV = `Subject, Start Date, Start Time, End Time`
-    .concat(response.ShiftAssignments
-        .filter((s) => s.EmployeeID == employeeID)
-        .map((s) =>
-             `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
-     ).toString()
-
-  console.log(gCalCSV)
+  //const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
 
   // updateDownloadButton
   if (!document.getElementById("downloadButton")){
@@ -69,9 +59,26 @@ function processResponse(r){
   }
 
   button = document.getElementById("downloadButton");
-  button.value = `download ${
-    getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ").join(" "))
-  } shifts`
+  button.innerHTML = `download ${
+    document.getElementById("txtMonthPicker").value.split(" ").join(" ")
+  } calendar`
+  button.style.position = "absolute";
+  button.style.top = "8px";
+  button.style.right = "120px";
+  button.style.width = "14  0px";
+  button.onclick = download;
 
   interval = null;
+}
+
+function download(response){
+  //Create CSV starting with headers
+  let gCalCSV = `Subject, Start Date, Start Time, End Time`
+    .concat(response.ShiftAssignments
+        .filter((s) => s.EmployeeID == employeeID)
+        .map((s) =>
+             `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
+     ).toString()
+
+  console.log(gCalCSV)
 }
