@@ -64,9 +64,11 @@
   }
 
   function processResponseIcal(r){
-    let response = JSON.parse(r);
 
+    let response = JSON.parse(r);
     console.log(response);
+
+    let formatDate = (d) => d.toISOString().split(":").join("").split("-").join("").split(".")[0]+"Z"
 
     //Get employee ID to filter assigned shifts
     const employeeID = response.MyEmployee.ID;
@@ -77,19 +79,19 @@
           //transform shift to ICS event
           .map((s) =>
             `BEGIN:VEVENT\n
-            SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\n
-            UID:\n
-            DTSTART:${new Date(s.StartDateTime).toLocaleDateString()}\n
-            DTEND:${new Date(s.EndDateTime).toLocaleTimeString()}\n
-            END:VEVENT`
-          )
+SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\n
+UID:\n
+DTSTART:${formatDate(new Date(s.StartDateTime))}\n
+DTEND:${formatDate(new Date(s.EndDateTime))}\n
+END:VEVENT\n`
+          ).join("\n")
 
 
     var ical = `
-      BEGIN:VCALENDAR\n
-      VERSION:2.0\n
-      ${events}\n
-      END:VCALENDAR
+BEGIN:VCALENDAR\n
+VERSION:2.0\n
+${events}
+END:VCALENDAR
     `
     console.log(ical)
 
