@@ -81,28 +81,22 @@
           .filter((s) => s.EmployeeID == employeeID)
           //transform shift to ICS event
           .map((s) =>
-            `BEGIN:VEVENT
-SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}
-UID:
-DTSTAMP:${formatDate(new Date())}
-DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}, ${s.StartDateTime.split('+')[0]}
-DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}, ${  s.EndDateTime.split('+')[0]}
+            `BEGIN:VEVENT\r
+SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\r
+UID:\r
+DTSTAMP:${formatDate(new Date())}\r
+DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}\r
+DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}\r
 END:VEVENT`
-          ).join("\n")
+          ).join("\r\n")
 
 
-    var ical = `
-BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:bundmadethisok.com
-${events}
-END:VCALENDAR
-    `
+    var ical = `BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:bundmadethisok.com\r
+${events}\r
+END:VCALENDAR`
     console.log(ical)
-
-    let data = new File([ical], { type: "text/plain" })
-
-    //let icsFile = window.URL.createObjectURL(data)
 
     let element = document.createElement('a')
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
