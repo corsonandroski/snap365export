@@ -24,6 +24,8 @@
   interval = setInterval(updateButton, 1000);
 
   function updateButton(){
+    //to do: check if user is on correct page before running
+
     //get month and year from page header
     const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
     const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
@@ -78,24 +80,39 @@
           .filter((s) => s.EmployeeID == employeeID)
           //transform shift to ICS event
           .map((s) =>
-            `BEGIN:VEVENT\n
-SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\n
-UID:\n
-DTSTART:${formatDate(new Date(s.StartDateTime))}\n
-DTEND:${formatDate(new Date(s.EndDateTime))}\n
-END:VEVENT\n`
+            `BEGIN:VEVENT
+SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}
+UID:
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(new Date(s.StartDateTime))}
+DTEND:${formatDate(new Date(s.EndDateTime))}
+END:VEVENT`
           ).join("\n")
 
 
     var ical = `
-BEGIN:VCALENDAR\n
-VERSION:2.0\n
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:bundmadethisok.com
 ${events}
 END:VCALENDAR
     `
     console.log(ical)
 
-    var data = new File([ical], { type: "text/plain" });
+    let data = new File([ical], { type: "text/plain" })
+
+    //let icsFile = window.URL.createObjectURL(data)
+
+    let element = document.createElement('a')
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
+    element.setAttribute('download', "test calaendar.ics");
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
 
     // If we are replacing a previously generated file we need to
     // manually revoke the object URL to avoid memory leaks.
