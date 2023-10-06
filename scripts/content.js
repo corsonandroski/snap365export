@@ -74,6 +74,7 @@
 
     //Get employee ID to filter assigned shifts
     const employeeID = response.MyEmployee.ID;
+    console.log(employeeID)
 
     var events = response.ShiftAssignments
           //remove other employee's shifts by checking ID
@@ -84,8 +85,8 @@
 SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}
 UID:
 DTSTAMP:${formatDate(new Date())}
-DTSTART:${formatDate(new Date(s.StartDateTime))}
-DTEND:${formatDate(new Date(s.EndDateTime))}
+DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}, ${s.StartDateTime.split('+')[0]}
+DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}, ${  s.EndDateTime.split('+')[0]}
 END:VEVENT`
           ).join("\n")
 
