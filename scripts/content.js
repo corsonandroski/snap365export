@@ -1,8 +1,3 @@
-//todo -
-// only run on correct page
-// output filename with employee name and month
-// popup - instructions for using plugin and importing ical?
-
 console.log('extension running');
 
 function httpGet(theUrl, callback)
@@ -78,7 +73,6 @@ function processResponseIcal(r){
 
   //Get employee ID to filter assigned shifts
   const employeeID = response.MyEmployee.ID;
-  console.log(employeeID)
 
   var events = response.ShiftAssignments
         //remove other employee's shifts by checking ID
@@ -104,7 +98,7 @@ END:VCALENDAR`
 
   let element = document.createElement('a')
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
-  element.setAttribute('download', "test calaendar.ics");
+  element.setAttribute('download', `${response.MyEmployee.ContactInfo.LastName} ${document.getElementById("txtMonthPicker").value.split(" ")[0]} shifts.ics`);
 
   element.style.display = 'none';
   document.body.appendChild(element);
@@ -126,12 +120,12 @@ END:VCALENDAR`
 
 function processResponseCSV(r){
 
-  let response = JSON.parse(r);
+  let response = JSON.parse(r)
 
-  console.log(response);
+  console.log(response)
 
   //Get employee ID to filter assigned shifts
-  const employeeID = response.MyEmployee.ID;
+  const employeeID = response.MyEmployee.id
 
   //Get shift definitions, create object with shift ID keys and shift description values
   //const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
