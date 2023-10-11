@@ -1,146 +1,150 @@
-//const article = document.querySelector("article");
-  console.log('extension running');
+//todo -
+// only run on correct page
+// output filename with employee name and month
+// popup - instructions for using plugin and importing ical?
 
-  function httpGet(theUrl, callback)
-  {
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.onreadystatechange = function() { 
-          if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-              callback(xmlHttp.responseText);
-      }
-      xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-      xmlHttp.send(null);
-  }
+console.log('extension running');
 
-  function getMonthFromString(mon){
-     return new Date(Date.parse(mon +" 1, 2012")).getMonth()+1
-  }
-
-
-  let interval;
-
-  let viewedMonth;
-
-  interval = setInterval(updateButton, 1000);
-
-  function updateButton(){
-    //to do: check if user is on correct page before running
-
-    //get month and year from page header
-    const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
-    const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
-
-    console.log("checking for month change,", month, viewedMonth);
-
-    //if the month displayed on page is different than the one referenced by download button (because page just loaded or switched to new month)
-    if (viewedMonth !== month){
-
-      //update download target month to match month displayed on page
-      viewedMonth = month;
-
-      // updateDownloadButton
-      if (!document.getElementById("downloadButton")){
-        let button = document.createElement("button");
-        button.id = "downloadButton"
-        document.querySelectorAll("[data-role='navbar']")[1].appendChild(button);
-      }
-
-      button = document.getElementById("downloadButton");
-      button.innerHTML = `download ${
-        document.getElementById("txtMonthPicker").value.split(" ").join(" ")
-      } calendar`
-      button.style.position = "absolute";
-      button.style.top = "8px";
-      button.style.right = "120px";
-      button.style.width = "140px";
-      button.onclick = download;
+function httpGet(theUrl, callback)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
     }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
+}
+
+function getMonthFromString(mon){
+   return new Date(Date.parse(mon +" 1, 2012")).getMonth()+1
+}
+
+
+let interval;
+
+let viewedMonth;
+
+interval = setInterval(updateButton, 1000);
+
+function updateButton(){
+  //to do: check if user is on correct page before running
+
+  //get month and year from page header
+  const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
+  const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
+
+  console.log("checking for month change,", month, viewedMonth);
+
+  //if the month displayed on page is different than the one referenced by download button (because page just loaded or switched to new month)
+  if (viewedMonth !== month){
+
+    //update download target month to match month displayed on page
+    viewedMonth = month;
+
+    // updateDownloadButton
+    if (!document.getElementById("downloadButton")){
+      let button = document.createElement("button");
+      button.id = "downloadButton"
+      document.querySelectorAll("[data-role='navbar']")[1].appendChild(button);
+    }
+
+    button = document.getElementById("downloadButton");
+    button.innerHTML = `download ${
+      document.getElementById("txtMonthPicker").value.split(" ").join(" ")
+    } calendar`
+    button.style.position = "absolute";
+    button.style.top = "8px";
+    button.style.right = "120px";
+    button.style.width = "140px";
+    button.onclick = download;
   }
+}
 
-  function download(){
-    console.log("downloading")
-    //get month and year from page header
-    const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
-    const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
-    httpGet(`https://era.snapschedule365.com/dataapi/ERA/CalendarView?monthDate=${year}-${month}-01`, processResponseIcal);
-  }
+function download(){
+  console.log("downloading")
+  //get month and year from page header
+  const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
+  const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
+  httpGet(`https://era.snapschedule365.com/dataapi/ERA/CalendarView?monthDate=${year}-${month}-01`, processResponseIcal);
+}
 
-  function processResponseIcal(r){
+function processResponseIcal(r){
 
-    let response = JSON.parse(r);
-    console.log(response);
+  let response = JSON.parse(r);
+  console.log(response);
 
-    let formatDate = (d) => d.toISOString().split(":").join("").split("-").join("").split(".")[0]+"Z"
+  let formatDate = (d) => d.toISOString().split(":").join("").split("-").join("").split(".")[0]+"Z"
 
-    //Get employee ID to filter assigned shifts
-    const employeeID = response.MyEmployee.ID;
-    console.log(employeeID)
+  //Get employee ID to filter assigned shifts
+  const employeeID = response.MyEmployee.ID;
+  console.log(employeeID)
 
-    var events = response.ShiftAssignments
-          //remove other employee's shifts by checking ID
-          .filter((s) => s.EmployeeID == employeeID)
-          //transform shift to ICS event
-          .map((s) =>
-            `BEGIN:VEVENT\r
+  var events = response.ShiftAssignments
+        //remove other employee's shifts by checking ID
+        .filter((s) => s.EmployeeID == employeeID)
+        //transform shift to ICS event
+        .map((s) =>
+          `BEGIN:VEVENT\r
 SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\r
 UID:\r
 DTSTAMP:${formatDate(new Date())}\r
 DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}\r
 DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}\r
 END:VEVENT`
-          ).join("\r\n")
+        ).join("\r\n")
 
 
-    var ical = `BEGIN:VCALENDAR\r
+  var ical = `BEGIN:VCALENDAR\r
 VERSION:2.0\r
 PRODID:bundmadethisok.com\r
 ${events}\r
 END:VCALENDAR`
-    console.log(ical)
+  console.log(ical)
 
-    let element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
-    element.setAttribute('download', "test calaendar.ics");
+  let element = document.createElement('a')
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
+  element.setAttribute('download', "test calaendar.ics");
 
-    element.style.display = 'none';
-    document.body.appendChild(element);
+  element.style.display = 'none';
+  document.body.appendChild(element);
 
-    element.click();
+  element.click();
 
-    document.body.removeChild(element);
+  document.body.removeChild(element);
 
-    // If we are replacing a previously generated file we need to
-    // manually revoke the object URL to avoid memory leaks.
-    // if (icsFile !== null) {
-    //   window.URL.revokeObjectURL(icsFile);
-    // }
+  // If we are replacing a previously generated file we need to
+  // manually revoke the object URL to avoid memory leaks.
+  // if (icsFile !== null) {
+  //   window.URL.revokeObjectURL(icsFile);
+  // }
 
-    // icsFile = window.URL.createObjectURL(data);
+  // icsFile = window.URL.createObjectURL(data);
 
-    // return icsFile;
-  }
+  // return icsFile;
+}
 
-  function processResponseCSV(r){
+function processResponseCSV(r){
 
-    let response = JSON.parse(r);
+  let response = JSON.parse(r);
 
-    console.log(response);
+  console.log(response);
 
-    //Get employee ID to filter assigned shifts
-    const employeeID = response.MyEmployee.ID;
+  //Get employee ID to filter assigned shifts
+  const employeeID = response.MyEmployee.ID;
 
-    //Get shift definitions, create object with shift ID keys and shift description values
-    //const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
+  //Get shift definitions, create object with shift ID keys and shift description values
+  //const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
 
-    //Create CSV starting with headers
-    let gCalCSV = `Subject, Start Date, Start Time, End Time`
-      .concat(response.ShiftAssignments
-          .filter((s) => s.EmployeeID == employeeID)
-          .map((s) =>
-               `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
-       ).toString()
+  //Create CSV starting with headers
+  let gCalCSV = `Subject, Start Date, Start Time, End Time`
+    .concat(response.ShiftAssignments
+        .filter((s) => s.EmployeeID == employeeID)
+        .map((s) =>
+             `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
+     ).toString()
 
-    console.log(gCalCSV)
+  console.log(gCalCSV)
 
-    interval = null;
-  }
+  interval = null;
+}
