@@ -11,7 +11,7 @@
     {
       "js": ["scripts/content.js"],
       "matches": [
-        "https://era.snapschedule365.com/ERA/Calendar*",
+        "https://era.snapschedule365.com/ERA/Calendar*"
       ]
     }
   ]
