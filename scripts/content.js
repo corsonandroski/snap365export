@@ -1,3 +1,6 @@
+//to do: task view!!!
+//handling color codes https://gist.github.com/agirorn/0e740d012b620968225de58859ccef5c#gistcomment-2662867
+
 console.log('extension running');
 
 function httpGet(theUrl, callback)
