@@ -1,5 +1,8 @@
 //to do: task view!!!
 //handling color codes https://gist.github.com/agirorn/0e740d012b620968225de58859ccef5c#gistcomment-2662867
+//subscribe url https://stackoverflow.com/questions/71595047/google-url-to-subscribe-to-a-calendar
+//force gcal ical url updates https://gist.github.com/gene1wood/02ed0d36f62d791518e452f55344240d
+//snap -> localstorage -> gcal? can gas-ics check localstorage ics for updates?
 
 console.log('extension running');
 
