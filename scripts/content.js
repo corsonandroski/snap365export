@@ -67,10 +67,10 @@ function download(){
   //get month and year from page header
   const month = getMonthFromString(document.getElementById("txtMonthPicker").value.split(" ")[0]);
   const year = document.getElementById("txtMonthPicker").value.split(" ")[1];
-  httpGet(`https://era.snapschedule365.com/dataapi/ERA/CalendarView?monthDate=${year}-${month}-01`, processResponseIcal);
+  httpGet(`https://era.snapschedule365.com/dataapi/ERA/CalendarView?monthDate=${year}-${month}-01`, processScheduleResponseIcal);
 }
 
-function processResponseIcal(r){
+function processScheduleResponseIcal(r){
 
   let response = JSON.parse(r);
   console.log(response);
@@ -80,27 +80,35 @@ function processResponseIcal(r){
   //Get employee ID to filter assigned shifts
   const employeeID = response.MyEmployee.ID;
 
-  var events = response.ShiftAssignments
+  var shifts = response.ShiftAssignments
         //remove other employee's shifts by checking ID
         .filter((s) => s.EmployeeID == employeeID)
+
+  var shiftDatesFormatted = shifts.map((s) => `${new Date(s.Date).getFullYear()}-${(new Date(s.Date).getMonth()+1).toString().padStart(2, '0')}-${new Date(s.Date).getDate().toString().padStart(2, '0')}`);
+  
+  const iCalTaskResponses = await Promise.all(
+      shiftDatesFormatted.map(async id => {
+        
+      })
+    )
         //transform shift to ICS event
-        .map((s) =>
-          `BEGIN:VEVENT\r
-SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\r
-UID:\r
-DTSTAMP:${formatDate(new Date())}\r
-DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}\r
-DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}\r
-END:VEVENT`
-        ).join("\r\n")
+//         .map((s) =>
+//           `BEGIN:VEVENT\r
+// SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\r
+// UID:\r
+// DTSTAMP:${formatDate(new Date())}\r
+// DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}\r
+// DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}\r
+// END:VEVENT`
+//         ).join("\r\n")
 
 
-  var ical = `BEGIN:VCALENDAR\r
-VERSION:2.0\r
-PRODID:bundmadethisok.com\r
-${events}\r
-END:VCALENDAR`
-  console.log(ical)
+//   var ical = `BEGIN:VCALENDAR\r
+// VERSION:2.0\r
+// PRODID:bundmadethisok.com\r
+// ${shifts}\r
+// END:VCALENDAR`
+//   console.log(ical)
 
   let element = document.createElement('a')
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
