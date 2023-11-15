@@ -93,9 +93,8 @@ async function processScheduleResponseIcal(r){
         )
   
   const iCalTaskResponses = await Promise.all(promises)
-  test=iCalTaskResponses
     console.log(iCalTaskResponses[0].json())
-    console.log(iCalTaskResponses[0].json()[2])
+    console.log(iCalTaskResponses[0].json().PromiseResult())
 
 
         //transform shift to ICS event
