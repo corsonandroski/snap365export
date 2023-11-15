@@ -70,7 +70,7 @@ function download(){
   httpGet(`https://era.snapschedule365.com/dataapi/ERA/CalendarView?monthDate=${year}-${month}-01`, processScheduleResponseIcal);
 }
 
-function processScheduleResponseIcal(r){
+async function processScheduleResponseIcal(r){
 
   let response = JSON.parse(r);
   console.log(response);
@@ -85,12 +85,19 @@ function processScheduleResponseIcal(r){
         .filter((s) => s.EmployeeID == employeeID)
 
   var shiftDatesFormatted = shifts.map((s) => `${new Date(s.Date).getFullYear()}-${(new Date(s.Date).getMonth()+1).toString().padStart(2, '0')}-${new Date(s.Date).getDate().toString().padStart(2, '0')}`);
+
+  console.log(shiftDatesFormatted)
+
+  var promises = shiftDatesFormatted.map(date => 
+            fetch(`https://era.snapschedule365.com/dataapi/ERA/TaskView?date=2023-11-14`)
+        )
   
-  const iCalTaskResponses = await Promise.all(
-      shiftDatesFormatted.map(async id => {
-        
-      })
-    )
+  const iCalTaskResponses = await Promise.all(promises)
+  test=iCalTaskResponses
+    console.log(iCalTaskResponses[0].json())
+    console.log(iCalTaskResponses[0].json()[2])
+
+
         //transform shift to ICS event
 //         .map((s) =>
 //           `BEGIN:VEVENT\r
