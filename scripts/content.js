@@ -92,10 +92,8 @@ async function processScheduleResponseIcal(r){
             fetch(`https://era.snapschedule365.com/dataapi/ERA/TaskView?date=2023-11-14`)
         )
   
-  const iCalTaskResponses = await Promise.all(promises)
-    console.log(iCalTaskResponses[0].json())
-    console.log(iCalTaskResponses[0].json().PromiseResult())
-
+  //https://stackoverflow.com/questions/50006595/using-promise-all-to-fetch-a-list-of-urls-with-await-statements
+  Promise.all(promises).then((values) => {console.log(values[0].json())})
 
         //transform shift to ICS event
 //         .map((s) =>
