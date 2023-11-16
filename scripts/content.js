@@ -8,27 +8,27 @@ console.log('extension running');
 
 function httpGet(theUrl, callback)
 {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
-    }
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.onreadystatechange = function() { 
+    if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+      callback(xmlHttp.responseText);
+  }
     xmlHttp.open("GET", theUrl, true); // true for asynchronous 
     xmlHttp.send(null);
-}
+  }
 
-function getMonthFromString(mon){
+  function getMonthFromString(mon){
    return new Date(Date.parse(mon +" 1, 2012")).getMonth()+1
-}
+ }
 
 
-let interval;
+ let interval;
 
-let viewedMonth;
+ let viewedMonth;
 
-interval = setInterval(updateButton, 1000);
+ interval = setInterval(updateButton, 1000);
 
-function updateButton(){
+ function updateButton(){
   //to do: check if user is on correct page before running
 
   //get month and year from page header
@@ -80,39 +80,61 @@ async function processScheduleResponseIcal(r){
   //Get employee ID to filter assigned shifts
   const employeeID = response.MyEmployee.ID;
 
-  var shifts = response.ShiftAssignments
+  var employeeShifts = response.ShiftAssignments
         //remove other employee's shifts by checking ID
         .filter((s) => s.EmployeeID == employeeID)
 
-  var shiftDatesFormatted = shifts.map((s) => `${new Date(s.Date).getFullYear()}-${(new Date(s.Date).getMonth()+1).toString().padStart(2, '0')}-${new Date(s.Date).getDate().toString().padStart(2, '0')}`);
+  function ICSEvent(summary, startTime, endTime){
+    return `BEGIN:VEVENT\r
+SUMMARY:${summary}\r
+UID:\r
+DTSTAMP:${formatDate(new Date())}\r
+DTSTART:${startTime}\r
+DTEND:${endTime}\r
+END:VEVENT`
+  }
 
-  console.log(shiftDatesFormatted)
+  var shifts = employeeShifts.map(s=>ICSEvent(
+    response.Shifts.find(x => x.ID == s.ShiftID).Description,
+    formatDate(new Date(s.StartDateTime.split('+')[0])),
+    formatDate(new Date(s.EndDateTime.split('+')[0]))
+  )).join("\r\n")
 
-  var promises = shiftDatesFormatted.map(date => 
-            fetch(`https://era.snapschedule365.com/dataapi/ERA/TaskView?date=2023-11-14`)
-        )
-  
+  console.log(shifts)
+
+  var shiftDatesFormatted = employeeShifts.map((s) => `${new Date(s.Date).getFullYear()}-${(new Date(s.Date).getMonth()+1).toString().padStart(2, '0')}-${new Date(s.Date).getDate().toString().padStart(2, '0')}`);
+
+  // console.log(shiftDatesFormatted)
+
+  var urls = shiftDatesFormatted.map(date => `https://era.snapschedule365.com/dataapi/ERA/TaskView?date=${date}`)
+        
   //https://stackoverflow.com/questions/50006595/using-promise-all-to-fetch-a-list-of-urls-with-await-statements
-  Promise.all(promises).then((values) => {console.log(values[0].json())})
 
-        //transform shift to ICS event
-//         .map((s) =>
-//           `BEGIN:VEVENT\r
-// SUMMARY:${response.Shifts.find(x => x.ID == s.ShiftID).Description}\r
-// UID:\r
-// DTSTAMP:${formatDate(new Date())}\r
-// DTSTART:${formatDate(new Date(s.StartDateTime.split('+')[0]))}\r
-// DTEND:${formatDate(new Date(s.EndDateTime.split('+')[0]))}\r
-// END:VEVENT`
-//         ).join("\r\n")
+  let tasks = []
+  let iCalTasks
 
+  fetchAll(urls).then((responses) => {
+    //aggregate all tasks
+    responses.forEach(r=>{
+      // console.log(r)
+      //some TaskAssignments are an empty array when shift has no assigned tasks
+      tasks = tasks.concat(r.data.ShiftAssignments.filter((t) => t.EmployeeID == employeeID)[0].TaskAssignments)
+    })
+    // console.log(tasks)
+    iCalTasks = tasks.map(t=>ICSEvent(
+        responses[0].data.Tasks.find(x => x.ID == t.TaskID).Description,
+        formatDate(new Date(t.ShiftAssignmentDate.split('T')[0].concat('T', t.StartTime))),
+        formatDate(new Date(t.ShiftAssignmentDate.split('T')[0].concat('T', t.StartTime)).addMinutes(t.Duration))
+        )).join("\r\n")
+    // console.log(iCalTasks)
 
-//   var ical = `BEGIN:VCALENDAR\r
-// VERSION:2.0\r
-// PRODID:bundmadethisok.com\r
-// ${shifts}\r
-// END:VCALENDAR`
-//   console.log(ical)
+    var ical = `BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:bundmadethisok.com\r
+${shifts}\r
+${iCalTasks}\r
+END:VCALENDAR`
+  console.log(ical)
 
   let element = document.createElement('a')
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ical));
@@ -134,7 +156,10 @@ async function processScheduleResponseIcal(r){
   // icsFile = window.URL.createObjectURL(data);
 
   // return icsFile;
+
+  })
 }
+
 
 function processResponseCSV(r){
 
@@ -150,13 +175,27 @@ function processResponseCSV(r){
 
   //Create CSV starting with headers
   let gCalCSV = `Subject, Start Date, Start Time, End Time`
-    .concat(response.ShiftAssignments
-        .filter((s) => s.EmployeeID == employeeID)
-        .map((s) =>
-             `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
-     ).toString()
+  .concat(response.ShiftAssignments
+    .filter((s) => s.EmployeeID == employeeID)
+    .map((s) =>
+     `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
+    ).toString()
 
   console.log(gCalCSV)
 
   interval = null;
+}
+
+function fetchAll(urls) {
+  return Promise.all(
+    urls.map(url => fetch(url)
+      .then(r => r.json())
+      .then(data => ({ data, url }))
+      .catch(error => ({ error, url }))
+    )
+  )
+}
+Date.prototype.addMinutes = function(m) {
+  this.setTime(this.getTime() + (m*60*1000));
+  return this;
 }
