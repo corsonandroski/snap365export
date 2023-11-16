@@ -1,5 +1,8 @@
-//to do: task view!!!
+//to do:
+    //overlapping start/end of month
+    //color codes?
 //handling color codes https://gist.github.com/agirorn/0e740d012b620968225de58859ccef5c#gistcomment-2662867
+  //https://icalendar.org/New-Properties-for-iCalendar-RFC-7986/5-9-color-property.html
 //subscribe url https://stackoverflow.com/questions/71595047/google-url-to-subscribe-to-a-calendar
 //force gcal ical url updates https://gist.github.com/gene1wood/02ed0d36f62d791518e452f55344240d
 //snap -> localstorage -> gcal? can gas-ics check localstorage ics for updates?
@@ -114,6 +117,7 @@ END:VEVENT`
   let iCalTasks
 
   fetchAll(urls).then((responses) => {
+    console.log(responses)
     //aggregate all tasks
     responses.forEach(r=>{
       // console.log(r)
@@ -158,32 +162,6 @@ END:VCALENDAR`
   // return icsFile;
 
   })
-}
-
-
-function processResponseCSV(r){
-
-  let response = JSON.parse(r)
-
-  console.log(response)
-
-  //Get employee ID to filter assigned shifts
-  const employeeID = response.MyEmployee.id
-
-  //Get shift definitions, create object with shift ID keys and shift description values
-  //const shifts = Object.fromEntries(response.Shifts.map((s) => [parseInt(s.ID), s.Description]))
-
-  //Create CSV starting with headers
-  let gCalCSV = `Subject, Start Date, Start Time, End Time`
-  .concat(response.ShiftAssignments
-    .filter((s) => s.EmployeeID == employeeID)
-    .map((s) =>
-     `\n${response.Shifts.find(x => x.ID == s.ShiftID).Description}, ${new Date(s.StartDateTime).toLocaleDateString()}, ${new Date(s.StartDateTime).toLocaleTimeString()}, ${new Date(s.EndDateTime.split("+")[0]).toLocaleTimeString()}`)
-    ).toString()
-
-  console.log(gCalCSV)
-
-  interval = null;
 }
 
 function fetchAll(urls) {
